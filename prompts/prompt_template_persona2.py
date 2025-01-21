@@ -444,6 +444,88 @@ Here are the attributes.
 Here are the new questions.
 '''
 
+# doc_keypoint_prompt_self_wo_doc = '''Please summarize the attributes that make up a document, and generate a new question based on each attribute.
+# ### important:
+# 1. The new questions should align with the selected attribute and it is independent of other attributes.
+# 2. The new questions should be independent of each other.
+# 3. The response to the new question does not require information from document.
+# 4. Do not provide a solution or answer to the question.
+# Your output should be as follows:
+# ### Attributes:
+# Here are the attributes.
+# ### New Questions:
+# Here are the new questions.
+# '''
+
+doc_keypoint_prompt_self = '''Generate new questions.
+### important:
+Do not provide a solution or answer to the question.
+Your output should be as follows:
+### New Questions:
+Here are the new questions.
+'''
+
+doc_keypoint_prompt_self_one = '''Generate a new question.
+### important:
+Do not provide a solution or answer to the question.
+Your output should be as follows:
+### New Question:
+Here is the new question.
+'''
+
+doc_keypoint_prompt_self_few_shot = '''Generate new questions based on the given examples.
+### Example:
+1. {question1}
+2. {question2}
+3. {question3}
+4. {question4}
+5. {question5}
+6. {question6}
+7. {question7}
+8. {question8}
+9. {question9}
+10. {question10}
+### important:
+Do not provide a solution or answer to the question.
+Your output should be as follows:
+### New Questions:
+Here is the new questions.
+'''
+
+doc_keypoint_prompt_self_wo_doc = '''Please come up with some attributes, and generate a new question based on each attribute.
+### important:
+1. The new questions should align with the selected attribute and it is independent of other attributes.
+2. The new questions should be independent of each other.
+3. Do not provide a solution or answer to the question.
+Your output should be as follows:
+### Attributes:
+Here are the attributes.
+### New Questions:
+Here are the new questions.
+'''
+
+doc_keypoint_prompt_self_wo_attr = '''Generate new questions based on the provided document.
+### Document:
+{doc}
+### important:
+1. The response to the new question does not require information from the document.
+2. Generate only new questions, no additional information.
+3. Do not provide a solution or answer to the question.
+Your output should be as follows:
+### New Questions:
+Here are the new questions.
+'''
+
+oss_doc_prompt = '''You are exceptionally skilled at crafting high-quality problems and offering precise solutions. Please gain inspiration from the following document snippets to create a high-quality problem. Present your output in two distinct sections: [Problem Description] and [Solution].
+Document snippets for inspiration:
+```
+{doc}
+```
+Guidelines for each section:
+1. [Problem Description]: This should be **completely self-contained**, providing all the contextual information one needs to understand and solve the problem. Assume common knowledge, but ensure that any specific context, variables, or document snippets pertinent to this problem are explicitly included.
+2. [Solution]: Offer a comprehensive, **correct** solution that accurately addresses the [Problem Description] you provided.
+'''
+
 #  value
 # 1. Do not reuse information from the original document for the new question.
 # 2. The new question should be able to be answered without information from the documentation.

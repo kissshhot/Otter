@@ -9,7 +9,7 @@ from tqdm import tqdm
 from importlib import import_module
 import argparse
 import sys
-from prompts.prompt_template_persona2 import doc_keypoint_prompt_self_wo_attr, doc_keypoint_prompt_self_n_test # , doc_keypoint_prompt_self_test, doc_diff_instruct, doc_keypoint_prompt, doc_keypoint_prompt_self, doc_keypoint_prompt_math, doc_keypoint_prompt_few_atr, doc_keypoint_prompt_self_1_shot, doc_keypoint_prompt_self_1_shot_n_question, doc_keypoint_prompt_self_n_question
+from prompts.prompt_template_persona2 import doc_keypoint_prompt_self_wo_doc # , doc_keypoint_prompt_self_test, doc_diff_instruct, doc_keypoint_prompt, doc_keypoint_prompt_self, doc_keypoint_prompt_math, doc_keypoint_prompt_few_atr, doc_keypoint_prompt_self_1_shot, doc_keypoint_prompt_self_1_shot_n_question, doc_keypoint_prompt_self_n_question
 # os.environ["CUDA_VISIBLE_DEVICES"] = "3"
 # model_id = "/data1/dyf/model/Llama-3.1-8B-Instruct/"
 # tokenizer = AutoTokenizer.from_pretrained(model_id)
@@ -165,23 +165,23 @@ def UCB_sample_record(seed_tasks, batch_length, roundi, is_vllm, model, sampling
     all_logs = []
     # lima_tasks = [json.loads(l) for l in open("/home/dyf/data_generate/doc-instruct/data/lima_train.jsonl", "r")]
     test_log = []
-    question_embedding = []
-    raw_logs = []
+    # question_embedding = []
+    # raw_logs = []
     # question_embedding = torch.load('/home/dyf/data_generate/persona-instruct/embedding/question_embedding.pt')
     # attributions = ['subtopic', 'resource', 'scene', 'skill', 'audience', 'perspective', 'writer']
     # formats = ['Yes/No Question', 'Choice Question', 'WH Question', ]
     if is_vllm == True:
-        for idx in tqdm(range(0, len(seed_tasks))): #len(seed_tasks)'
+        for idx in tqdm(range(0, 100000000)): #len(seed_tasks)'
             # batch_length = 2000000
             # if idx <= 836:
             #     continue
             # task = random.sample(lima_tasks, 1)
             # sl_attributions = attributions # random.sample(attributions, 5)
-            doc = seed_tasks[idx]['doc']
+            # doc = seed_tasks[idx]['doc']
             # if len(doc) >=1000:
             #     doc = doc[0:1000]
-            # doc_keypoint_prompt_math doc_keypoint_prompt_few_atr doc_keypoint_prompt_self_wo_attr doc_keypoint_prompt_self_n_test
-            prompt = doc_keypoint_prompt_self_n_test.format(doc=doc)# , lima_question1=task[0]['conversations'][0])
+            # doc_keypoint_prompt_math doc_keypoint_prompt_few_atr
+            prompt = doc_keypoint_prompt_self_wo_doc# .format(doc=doc)
             # prompt = doc_diff_instruct.format(doc1=task[0]['doc'], doc2=task[1]['doc'], doc3=task[2]['doc'], question1=task[0]['conversations'][0], question2=task[1]['conversations'][0], question3=task[2]['conversations'][0], doc=doc)
             # prompt = persona_diff_instruct_generate_simple.format(questioner1=task[0]['questioner'], questioner2=task[1]['questioner'], questioner3=task[2]['questioner'], question1=task[0]['conversations'][0], question2=task[1]['conversations'][0], question3=task[2]['conversations'][0])
             et = False
@@ -215,14 +215,16 @@ def UCB_sample_record(seed_tasks, batch_length, roundi, is_vllm, model, sampling
                 questions = re.findall(pattern, text_question, re.DOTALL)
                 if len(questions) == 0:
                     # 使用换行符分割文本
-                    questions = text_question.split('\n')
+                    questions = re.findall(r".*\?$", text_question, re.MULTILINE) + re.findall(r".*\.$", text_question, re.MULTILINE)
+                    questions = [item for item in questions if "here are the new question" not in item.lower()]
+                    questions = [item.split(':**', 1)[1].strip() if ':**' in item else item for item in questions]
                     # 去除每个问题前的编号
-                    questions = [q.split('. ', 1)[1] for q in questions if q[0].isdigit()]
+                    questions = [q.split('. ', 1)[1] if q[0].isdigit() else q for q in questions]
             except:
                 continue
             for question in questions:
                 t = {}
-                t['doc'] = doc
+                # t['doc'] = doc
                 t['sl_attributions'] = sl_attributions
                 # t['lima'] = task[0]['conversations'][0]
                 t['conversations'] = []
@@ -240,9 +242,9 @@ def UCB_sample_record(seed_tasks, batch_length, roundi, is_vllm, model, sampling
                     # respondent_doc.append(respondent)
                     print(question)
                     all_logs.append(t)
-                    if len(all_logs) % 500 == 0:
+                    if len(all_logs) % 500 == 0 or len(all_logs) <= 500:
                         # torch.save(question_embedding, f'/home/dyf/data_generate/doc-instruct/embedding/diff_{batch_length}.pt')
-                        output_log_jsonl(os.path.join('/home/dyf/data_generate/doc-instruct/data/lima/epoch/diff/', f"diff_new_instruct_{batch_length}_doc_round_{roundi}_{model_id}.jsonl"), all_logs)
+                        output_log_jsonl(os.path.join('/home/dyf/data_generate/doc-instruct/data/lima/epoch/diff/', f"diff_new_instruct_{batch_length}_wo_doc_0.3_round_{roundi}_{model_id}.jsonl"), all_logs)
                 else:
                     test_ = {}
                     test_['id'] = idx
@@ -253,7 +255,7 @@ def UCB_sample_record(seed_tasks, batch_length, roundi, is_vllm, model, sampling
                 if len(all_logs) >= batch_length:
                     # torch.save(question_embedding, f'/home/dyf/data_generate/doc-instruct/embedding/diff_{batch_length}.pt')
                     # output_log_jsonl(os.path.join('/home/dyf/data_generate/doc-instruct/data/lima/raw_data/', f"diff_raw_instruct_{batch_length}_doc_round_{roundi}_{model_id}.jsonl"), raw_logs)
-                    output_log_jsonl(os.path.join('/home/dyf/data_generate/doc-instruct/data/lima/epoch/diff/', f"diff_new_instruct_{batch_length}_doc_round_{roundi}_{model_id}.jsonl"), all_logs)
+                    output_log_jsonl(os.path.join('/home/dyf/data_generate/doc-instruct/data/lima/epoch/diff/', f"diff_new_instruct_{batch_length}_wo_doc_0.3_round_{roundi}_{model_id}.jsonl"), all_logs)
                     sys.exit(0)
     # all_logs = seed_tasks + all_logs
     return all_logs

@@ -9,7 +9,7 @@ from tqdm import tqdm
 from importlib import import_module
 import argparse
 import sys
-from prompts.prompt_template_persona2 import doc_keypoint_prompt_self_wo_attr, doc_keypoint_prompt_self_n_test # , doc_keypoint_prompt_self_test, doc_diff_instruct, doc_keypoint_prompt, doc_keypoint_prompt_self, doc_keypoint_prompt_math, doc_keypoint_prompt_few_atr, doc_keypoint_prompt_self_1_shot, doc_keypoint_prompt_self_1_shot_n_question, doc_keypoint_prompt_self_n_question
+from prompts.prompt_template_persona2 import oss_doc_prompt, doc_keypoint_prompt_self_n_test # , doc_keypoint_prompt_self_test, doc_diff_instruct, doc_keypoint_prompt, doc_keypoint_prompt_self, doc_keypoint_prompt_math, doc_keypoint_prompt_few_atr, doc_keypoint_prompt_self_1_shot, doc_keypoint_prompt_self_1_shot_n_question, doc_keypoint_prompt_self_n_question
 # os.environ["CUDA_VISIBLE_DEVICES"] = "3"
 # model_id = "/data1/dyf/model/Llama-3.1-8B-Instruct/"
 # tokenizer = AutoTokenizer.from_pretrained(model_id)
@@ -165,13 +165,13 @@ def UCB_sample_record(seed_tasks, batch_length, roundi, is_vllm, model, sampling
     all_logs = []
     # lima_tasks = [json.loads(l) for l in open("/home/dyf/data_generate/doc-instruct/data/lima_train.jsonl", "r")]
     test_log = []
-    question_embedding = []
-    raw_logs = []
+    # question_embedding = []
+    # raw_logs = []
     # question_embedding = torch.load('/home/dyf/data_generate/persona-instruct/embedding/question_embedding.pt')
     # attributions = ['subtopic', 'resource', 'scene', 'skill', 'audience', 'perspective', 'writer']
     # formats = ['Yes/No Question', 'Choice Question', 'WH Question', ]
     if is_vllm == True:
-        for idx in tqdm(range(0, len(seed_tasks))): #len(seed_tasks)'
+        for idx in tqdm(range(10003, len(seed_tasks))): #len(seed_tasks)'
             # batch_length = 2000000
             # if idx <= 836:
             #     continue
@@ -181,7 +181,7 @@ def UCB_sample_record(seed_tasks, batch_length, roundi, is_vllm, model, sampling
             # if len(doc) >=1000:
             #     doc = doc[0:1000]
             # doc_keypoint_prompt_math doc_keypoint_prompt_few_atr doc_keypoint_prompt_self_wo_attr doc_keypoint_prompt_self_n_test
-            prompt = doc_keypoint_prompt_self_n_test.format(doc=doc)# , lima_question1=task[0]['conversations'][0])
+            prompt = oss_doc_prompt.format(doc=doc)
             # prompt = doc_diff_instruct.format(doc1=task[0]['doc'], doc2=task[1]['doc'], doc3=task[2]['doc'], question1=task[0]['conversations'][0], question2=task[1]['conversations'][0], question3=task[2]['conversations'][0], doc=doc)
             # prompt = persona_diff_instruct_generate_simple.format(questioner1=task[0]['questioner'], questioner2=task[1]['questioner'], questioner3=task[2]['questioner'], question1=task[0]['conversations'][0], question2=task[1]['conversations'][0], question3=task[2]['conversations'][0])
             et = False
@@ -194,9 +194,10 @@ def UCB_sample_record(seed_tasks, batch_length, roundi, is_vllm, model, sampling
                     break
                 # print(result) Ensure that the new questions are aligned with the selected attribute values, and that the new questions are independent of each other.
                 try:
-                    if '### New Questions:' in result:
-                        text_question = result.split('### New Questions:')[1].strip('"').strip()
-                        sl_attributions = result.split('### Attributes:')[1].split('### New Questions:')[0].strip('"').strip()
+                    if '[Problem Description]' in result:
+                        question = result.split('[Problem Description]')[1].split('[Solution]')[0].strip()
+                        solution = result.split('[Problem Description]')[1].split('[Solution]')[1].strip()
+                        # sl_attributions = result.split('### Attributes:')[1].split('### New Questions:')[0].strip('"').strip()
                     # else:
                     #     question = result.strip('"').strip()
                     break
@@ -208,53 +209,51 @@ def UCB_sample_record(seed_tasks, batch_length, roundi, is_vllm, model, sampling
             print(prompt)
             print(result)
             # 使用正则表达式匹配每个问题的描述部分
-            try:
-                pattern = r'\d+\.\s*\*\*.*?\*\*:\s*(.*?)(?=\n\d+|\Z)'
+            # try:
+            #     pattern = r'\d+\.\s*\*\*.*?\*\*:\s*(.*?)(?=\n\d+|\Z)'
 
-                # 查找所有匹配的问题描述
-                questions = re.findall(pattern, text_question, re.DOTALL)
-                if len(questions) == 0:
-                    # 使用换行符分割文本
-                    questions = text_question.split('\n')
-                    # 去除每个问题前的编号
-                    questions = [q.split('. ', 1)[1] for q in questions if q[0].isdigit()]
-            except:
-                continue
-            for question in questions:
-                t = {}
-                t['doc'] = doc
-                t['sl_attributions'] = sl_attributions
-                # t['lima'] = task[0]['conversations'][0]
-                t['conversations'] = []
-                t['conversations'].append(question)
-                # raw_logs.append(t)
-                # if len(raw_logs) % 500 == 0:
-                #     output_log_jsonl(os.path.join('/home/dyf/data_generate/doc-instruct/data/lima/raw_data/', f"diff_raw_instruct_{batch_length}_doc_round_{roundi}_{model_id}.jsonl"), raw_logs)
-                # if doc_filter(question, doc):
-                #     continue
-                # f1, _ = embedding_filter(question, question_embedding)
-                if True: # filter_output(documents, question) and filter_output(questioner_doc, questioner) and f1 and f2: # and filter_output(respondent_doc, respondent): # and quality_score_vllm(question, model, sampling_params, chat_formatting_function):
-                    # _, question_embedding = embedding_filter(question, question_embedding)
-                    # documents.append(question)
-                    # questioner_doc.append(questioner)
-                    # respondent_doc.append(respondent)
-                    print(question)
-                    all_logs.append(t)
-                    if len(all_logs) % 500 == 0:
-                        # torch.save(question_embedding, f'/home/dyf/data_generate/doc-instruct/embedding/diff_{batch_length}.pt')
-                        output_log_jsonl(os.path.join('/home/dyf/data_generate/doc-instruct/data/lima/epoch/diff/', f"diff_new_instruct_{batch_length}_doc_round_{roundi}_{model_id}.jsonl"), all_logs)
-                else:
-                    test_ = {}
-                    test_['id'] = idx
-                    test_['result'] = [f1]
-                    test_log.append(test_)
-                    output_log_jsonl(os.path.join("/home/dyf/data_generate/doc-instruct/data/lima/wrong/", f"bool_log_round_{roundi}_{model_id}.jsonl"), test_log)
-                    continue
-                if len(all_logs) >= batch_length:
+            #     # 查找所有匹配的问题描述
+            #     questions = re.findall(pattern, text_question, re.DOTALL)
+            #     if len(questions) == 0:
+            #         # 使用换行符分割文本
+            #         questions = text_question.split('\n')
+            #         # 去除每个问题前的编号
+            #         questions = [q.split('. ', 1)[1] for q in questions if q[0].isdigit()]
+            # except:
+            #     continue
+            t = {}
+            t['doc'] = doc
+            # t['sl_attributions'] = sl_attributions
+            # t['lima'] = task[0]['conversations'][0]
+            t['conversations'] = []
+            t['conversations'].append(question)
+            t['conversations'].append(solution)
+            # raw_logs.append(t)
+            # if doc_filter(text_question, doc):
+            #     continue
+            # f1, _ = embedding_filter(question, question_embedding)
+            if True: # filter_output(documents, question) and filter_output(questioner_doc, questioner) and f1 and f2: # and filter_output(respondent_doc, respondent): # and quality_score_vllm(question, model, sampling_params, chat_formatting_function):
+                # _, question_embedding = embedding_filter(question, question_embedding)
+                # documents.append(question)
+                # questioner_doc.append(questioner)
+                # respondent_doc.append(respondent)
+                print(question)
+                all_logs.append(t)
+                if len(all_logs) % 500 == 0 or len(all_logs) <= 500:
                     # torch.save(question_embedding, f'/home/dyf/data_generate/doc-instruct/embedding/diff_{batch_length}.pt')
-                    # output_log_jsonl(os.path.join('/home/dyf/data_generate/doc-instruct/data/lima/raw_data/', f"diff_raw_instruct_{batch_length}_doc_round_{roundi}_{model_id}.jsonl"), raw_logs)
-                    output_log_jsonl(os.path.join('/home/dyf/data_generate/doc-instruct/data/lima/epoch/diff/', f"diff_new_instruct_{batch_length}_doc_round_{roundi}_{model_id}.jsonl"), all_logs)
-                    sys.exit(0)
+                    output_log_jsonl(os.path.join('/home/dyf/data_generate/doc-instruct/data/lima/epoch/diff/', f"diff_new_instruct_{batch_length}_oss_round_{roundi}_{model_id}.jsonl"), all_logs)
+            else:
+                test_ = {}
+                test_['id'] = idx
+                test_['result'] = [f1]
+                test_log.append(test_)
+                output_log_jsonl(os.path.join("/home/dyf/data_generate/doc-instruct/data/lima/wrong/", f"bool_log_round_{roundi}_{model_id}.jsonl"), test_log)
+                continue
+            if len(all_logs) >= batch_length:
+                # torch.save(question_embedding, f'/home/dyf/data_generate/doc-instruct/embedding/diff_{batch_length}.pt')
+                # output_log_jsonl(os.path.join('/home/dyf/data_generate/doc-instruct/data/lima/raw_data/', f"diff_raw_instruct_{batch_length}_doc_round_{roundi}_{model_id}.jsonl"), raw_logs)
+                output_log_jsonl(os.path.join('/home/dyf/data_generate/doc-instruct/data/lima/epoch/diff/', f"diff_new_instruct_{batch_length}_oss_round_{roundi}_{model_id}.jsonl"), all_logs)
+                sys.exit(0)
     # all_logs = seed_tasks + all_logs
     return all_logs
 

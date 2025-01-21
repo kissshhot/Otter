@@ -165,8 +165,8 @@ def UCB_sample_record(seed_tasks, batch_length, roundi, is_vllm, model, sampling
     all_logs = []
     # lima_tasks = [json.loads(l) for l in open("/home/dyf/data_generate/doc-instruct/data/lima_train.jsonl", "r")]
     test_log = []
-    question_embedding = []
-    raw_logs = []
+    # question_embedding = []
+    # raw_logs = []
     # question_embedding = torch.load('/home/dyf/data_generate/persona-instruct/embedding/question_embedding.pt')
     # attributions = ['subtopic', 'resource', 'scene', 'skill', 'audience', 'perspective', 'writer']
     # formats = ['Yes/No Question', 'Choice Question', 'WH Question', ]
@@ -181,7 +181,7 @@ def UCB_sample_record(seed_tasks, batch_length, roundi, is_vllm, model, sampling
             # if len(doc) >=1000:
             #     doc = doc[0:1000]
             # doc_keypoint_prompt_math doc_keypoint_prompt_few_atr doc_keypoint_prompt_self_wo_attr doc_keypoint_prompt_self_n_test
-            prompt = doc_keypoint_prompt_self_n_test.format(doc=doc)# , lima_question1=task[0]['conversations'][0])
+            prompt = doc_keypoint_prompt_self_wo_attr.format(doc=doc)
             # prompt = doc_diff_instruct.format(doc1=task[0]['doc'], doc2=task[1]['doc'], doc3=task[2]['doc'], question1=task[0]['conversations'][0], question2=task[1]['conversations'][0], question3=task[2]['conversations'][0], doc=doc)
             # prompt = persona_diff_instruct_generate_simple.format(questioner1=task[0]['questioner'], questioner2=task[1]['questioner'], questioner3=task[2]['questioner'], question1=task[0]['conversations'][0], question2=task[1]['conversations'][0], question3=task[2]['conversations'][0])
             et = False
@@ -196,7 +196,7 @@ def UCB_sample_record(seed_tasks, batch_length, roundi, is_vllm, model, sampling
                 try:
                     if '### New Questions:' in result:
                         text_question = result.split('### New Questions:')[1].strip('"').strip()
-                        sl_attributions = result.split('### Attributes:')[1].split('### New Questions:')[0].strip('"').strip()
+                        # sl_attributions = result.split('### Attributes:')[1].split('### New Questions:')[0].strip('"').strip()
                     # else:
                     #     question = result.strip('"').strip()
                     break
@@ -223,14 +223,12 @@ def UCB_sample_record(seed_tasks, batch_length, roundi, is_vllm, model, sampling
             for question in questions:
                 t = {}
                 t['doc'] = doc
-                t['sl_attributions'] = sl_attributions
+                # t['sl_attributions'] = sl_attributions
                 # t['lima'] = task[0]['conversations'][0]
                 t['conversations'] = []
                 t['conversations'].append(question)
                 # raw_logs.append(t)
-                # if len(raw_logs) % 500 == 0:
-                #     output_log_jsonl(os.path.join('/home/dyf/data_generate/doc-instruct/data/lima/raw_data/', f"diff_raw_instruct_{batch_length}_doc_round_{roundi}_{model_id}.jsonl"), raw_logs)
-                # if doc_filter(question, doc):
+                # if doc_filter(text_question, doc):
                 #     continue
                 # f1, _ = embedding_filter(question, question_embedding)
                 if True: # filter_output(documents, question) and filter_output(questioner_doc, questioner) and f1 and f2: # and filter_output(respondent_doc, respondent): # and quality_score_vllm(question, model, sampling_params, chat_formatting_function):
@@ -240,9 +238,9 @@ def UCB_sample_record(seed_tasks, batch_length, roundi, is_vllm, model, sampling
                     # respondent_doc.append(respondent)
                     print(question)
                     all_logs.append(t)
-                    if len(all_logs) % 500 == 0:
+                    if len(all_logs) % 500 == 0 or len(all_logs) <= 500:
                         # torch.save(question_embedding, f'/home/dyf/data_generate/doc-instruct/embedding/diff_{batch_length}.pt')
-                        output_log_jsonl(os.path.join('/home/dyf/data_generate/doc-instruct/data/lima/epoch/diff/', f"diff_new_instruct_{batch_length}_doc_round_{roundi}_{model_id}.jsonl"), all_logs)
+                        output_log_jsonl(os.path.join('/home/dyf/data_generate/doc-instruct/data/lima/epoch/diff/', f"diff_new_instruct_{batch_length}_wo_attr_round_{roundi}_{model_id}.jsonl"), all_logs)
                 else:
                     test_ = {}
                     test_['id'] = idx
@@ -253,7 +251,7 @@ def UCB_sample_record(seed_tasks, batch_length, roundi, is_vllm, model, sampling
                 if len(all_logs) >= batch_length:
                     # torch.save(question_embedding, f'/home/dyf/data_generate/doc-instruct/embedding/diff_{batch_length}.pt')
                     # output_log_jsonl(os.path.join('/home/dyf/data_generate/doc-instruct/data/lima/raw_data/', f"diff_raw_instruct_{batch_length}_doc_round_{roundi}_{model_id}.jsonl"), raw_logs)
-                    output_log_jsonl(os.path.join('/home/dyf/data_generate/doc-instruct/data/lima/epoch/diff/', f"diff_new_instruct_{batch_length}_doc_round_{roundi}_{model_id}.jsonl"), all_logs)
+                    output_log_jsonl(os.path.join('/home/dyf/data_generate/doc-instruct/data/lima/epoch/diff/', f"diff_new_instruct_{batch_length}_wo_attr_round_{roundi}_{model_id}.jsonl"), all_logs)
                     sys.exit(0)
     # all_logs = seed_tasks + all_logs
     return all_logs

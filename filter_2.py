@@ -11,7 +11,7 @@ import re
 import string
 from tqdm import tqdm
 import argparse
-os.environ["CUDA_VISIBLE_DEVICES"] = "4"
+os.environ["CUDA_VISIBLE_DEVICES"] = "2"
 tokenizer_embedding = AutoTokenizer.from_pretrained('BAAI/bge-small-en-v1.5')
 model_embedding = AutoModel.from_pretrained('BAAI/bge-small-en-v1.5', device_map={"": "cuda"}) # , device_map={"": "cuda"}
 model_embedding.eval()
@@ -101,13 +101,13 @@ def doc_filter(txt, doc):
 if __name__ == "__main__":
     question_embedding = []
     all_logs = []
-    seed_tasks_path = "/home/dyf/data_generate/doc-instruct/data/lima/raw_data/diff_raw_instruct_0_doc_round_0_Mistral-7B-Instruct-v0.3.jsonl"
+    seed_tasks_path = "/home/dyf/data_generate/doc-instruct/data/lima/epoch/com/com0-words.jsonl"
     seed_tasks = [json.loads(l) for l in open(seed_tasks_path, "r")]
     for task in tqdm(seed_tasks):
         question = task['conversations'][0]
-        doc = task['doc']
-        if doc_filter(question, doc):
-            continue
+        # doc = task['doc']
+        # if doc_filter(question, doc):
+        #     continue
         f1, _ = embedding_filter(question, question_embedding)
         if f1: # filter_output(documents, question) and filter_output(questioner_doc, questioner) and f1 and f2: # and filter_output(respondent_doc, respondent): # and quality_score_vllm(question, model, sampling_params, chat_formatting_function):
             _, question_embedding = embedding_filter(question, question_embedding)
@@ -116,8 +116,8 @@ if __name__ == "__main__":
             # respondent_doc.append(respondent)
             print(question)
             all_logs.append(task)
-            if len(all_logs) >= 4000:
-                output_log_jsonl(os.path.join('/home/dyf/data_generate/doc-instruct/data/lima/epoch/filter/', f"0.8_4000_Mistral-7B-Instruct-v0.3.jsonl"), all_logs)
-                break
+            # if len(all_logs) >= 11000:
+            #     output_log_jsonl(os.path.join('/home/dyf/data_generate/doc-instruct/data/lima/epoch/filter_2/', f"10000_filter_2.jsonl"), all_logs)
+            #     break
 
-    output_log_jsonl(os.path.join('/home/dyf/data_generate/doc-instruct/data/lima/epoch/filter/', f"0.8_4000_Mistral-7B-Instruct-v0.3.jsonl"), all_logs)
+    output_log_jsonl(os.path.join('/home/dyf/data_generate/doc-instruct/data/lima/epoch/filter_2/', f"10000_filter_2.jsonl"), all_logs)

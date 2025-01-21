@@ -104,7 +104,7 @@ def use_vllm(prompts, model, sampling_params, chat_formatting_function, tokenize
 def response_generate_main(batch_dir, seed_tasks, model, sampling_params, chat_formatting_function, tokenizer, model_id, batch_length):
     model_id = model_id.split('/')[-1]
     all_logs = []
-    response_path = "/home/dyf/data_generate/doc-instruct/data/lima/epoch/diff/0.8_4000_Llama-3.1-Tulu-3-8B-response.jsonl"
+    response_path = "/home/dyf/data_generate/doc-instruct/data/lima/epoch/com/com_ablation/pre_com_response/pre_10002.jsonl"
     seed_tasks_2 = [json.loads(l) for l in open(response_path, "r")]
     # import copy
     # original_list = [[1, 2, 3], [4, 5, 6]]
@@ -115,13 +115,13 @@ def response_generate_main(batch_dir, seed_tasks, model, sampling_params, chat_f
         # prompt = persona_com_instruct_generate_rewrite.format(questioner=questioner, question=question)
         prompt = t['conversations'][0].strip() # answer_generate.format(instruction=instruction).strip()
         for task2 in seed_tasks_2:
-            if prompt == task2['conversations'][0]:
+            if prompt == task2['conversations'][0].strip('*').strip():
                 all_logs.append(task2)
                 if len(all_logs) % 500 == 0 or len(all_logs) == 4000:
                     output_log_jsonl(os.path.join(batch_dir, f"raw_response_{model_id}_{batch_length}.jsonl"), all_logs) 
                 flag = True
         if flag:
-            if len(all_logs) >= 4000:
+            if len(all_logs) >= 10000:
                 break
             continue
 
@@ -150,7 +150,7 @@ def response_generate_main(batch_dir, seed_tasks, model, sampling_params, chat_f
         all_logs.append(t)
         if len(all_logs) % 500 == 0 or len(all_logs) == 4000:
             output_log_jsonl(os.path.join(batch_dir, f"raw_response_{model_id}_{batch_length}.jsonl"), all_logs)
-        if len(all_logs) >= 4000:
+        if len(all_logs) >= 10000:
             break
     output_log_jsonl(os.path.join(batch_dir, f"raw_response_{model_id}_{batch_length}.jsonl"), all_logs)
 

@@ -1,0 +1,26 @@
+[33m6ad601f[m[33m ([m[1;36mHEAD -> [m[1;32mmain[m[33m)[m HEAD@{0}: commit: 1.22
+[33m009564a[m HEAD@{1}: commit: test
+[33m6d34204[m HEAD@{2}: reset: moving to HEAD
+[33m6d34204[m HEAD@{3}: rebase (abort): updating HEAD
+[33m6d34204[m HEAD@{4}: rebase (abort): updating HEAD
+[33m6d34204[m HEAD@{5}: commit: Commit message
+[33mdf0323a[m HEAD@{6}: commit: 1.22
+[33mfb81992[m[33m ([m[1;31morigin/main[m[33m)[m HEAD@{7}: commit: delete
+[33ma62ead5[m HEAD@{8}: reset: moving to HEAD~2
+[33mb53a024[m HEAD@{9}: commit: delete
+[33m0f8617a[m HEAD@{10}: commit: delete
+[33ma62ead5[m HEAD@{11}: reset: moving to HEAD~1
+[33ma043812[m HEAD@{12}: commit: delete
+[33ma62ead5[m HEAD@{13}: reset: moving to HEAD~5
+[33ma2b11e9[m HEAD@{14}: commit: delete
+[33m96ac1cc[m HEAD@{15}: commit: delete
+[33m6fd416b[m HEAD@{16}: commit: Add .gitignore to repository
+[33mc0da5e6[m HEAD@{17}: commit: Add .gitignore to repository
+[33m72b7dab[m HEAD@{18}: commit: Add .gitignore to repository
+[33ma62ead5[m HEAD@{19}: commit: Add .gitignore to repository
+[33ma493a90[m HEAD@{20}: commit: 12.19.0
+[33mb0ab47c[m HEAD@{21}: commit: 12.19
+[33mda334f3[m HEAD@{22}: commit: 12.19.1
+[33mfcfaf49[m HEAD@{23}: commit: 12.18
+[33m9f543a4[m HEAD@{24}: Branch: renamed refs/heads/master to refs/heads/main
+[33m9f543a4[m HEAD@{26}: commit (initial): Initial commit

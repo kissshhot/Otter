@@ -262,7 +262,7 @@ def random_sample(seed_tasks, roundi, is_vllm, batch_length, model, sampling_par
     all_logs = []
     model_id = model_id.split('/')[-1]
     if roundi > 0:
-        pre_tasks = [json.loads(l) for l in open(f"/home/dyf/data_generate/doc-instruct/data/lima/epoch/qwen/com_new_instruct_{batch_length}_round_{roundi-1}_{model_id}.jsonl", "r")]
+        pre_tasks = [json.loads(l) for l in open(f"/home/dyf/data_generate/doc-instruct/data/lima/epoch/mistral/com_new_instruct_{batch_length}_round_{roundi-1}_{model_id}.jsonl", "r")]
     if is_vllm == True:
         flag = False
         flag2 = False
@@ -338,14 +338,14 @@ def random_sample(seed_tasks, roundi, is_vllm, batch_length, model, sampling_par
                 # # t['conversations'].append({"from":"user", "value": })
                 # all_logs.append(t)
                 if len(all_logs) % 500 == 0:
-                    output_log_jsonl(os.path.join('/home/dyf/data_generate/doc-instruct/data/lima/epoch/qwen/', f"com_new_instruct_{batch_length}_round_{roundi+1}_{model_id}_unscore.jsonl"), all_logs) 
+                    output_log_jsonl(os.path.join('/home/dyf/data_generate/doc-instruct/data/lima/epoch/mistral/', f"com_new_instruct_{batch_length}_round_{roundi+1}_{model_id}_unscore.jsonl"), all_logs) 
             else:
                 continue
             if len(all_logs) >= 20000:
                 print(idx)
                 print(pre_question)
                 break
-    output_log_jsonl(os.path.join('/home/dyf/data_generate/doc-instruct/data/lima/epoch/qwen/', f"com_new_instruct_{batch_length}_round_{roundi+1}_{model_id}_unscore.jsonl"), all_logs)
+    output_log_jsonl(os.path.join('/home/dyf/data_generate/doc-instruct/data/lima/epoch/mistral/', f"com_new_instruct_{batch_length}_round_{roundi+1}_{model_id}_unscore.jsonl"), all_logs)
     print(flag)
     print(flag2)
     return all_logs

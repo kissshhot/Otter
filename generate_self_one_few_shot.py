@@ -7,7 +7,7 @@ import vllm
 from importlib import import_module
 import torch
 from transformers import AutoTokenizer
-os.environ["CUDA_VISIBLE_DEVICES"] = "4,5"
+os.environ["CUDA_VISIBLE_DEVICES"] = "0,1"
 # from persona_diff_instruct_generate_demo_lima_persona2 import main_diff
 # model_id = "/data1/dyf/model/Llama-3.1-Tulu-3-8B/" # /data1/dyf/model/Llama-3.1-8B-Instruct/ /data1/dyf/model/Mistral-7B-Instruct-v0.3/ /data1/dyf/model/Llama-3.1-Tulu-3-8B/
 

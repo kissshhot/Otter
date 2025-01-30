@@ -106,7 +106,7 @@ if __name__ == "__main__":
         )
         
         sampling_params = vllm.SamplingParams(
-            temperature=0.3,  # greedy decoding
+            temperature=0.7,  # greedy decoding
             max_tokens=5000,
             # stop=args.additional_stop_sequence,
             # --additional_stop_sequence',

@@ -11,7 +11,7 @@ import re
 import string
 from tqdm import tqdm
 import argparse
-os.environ["CUDA_VISIBLE_DEVICES"] = "2"
+os.environ["CUDA_VISIBLE_DEVICES"] = "1"
 tokenizer_embedding = AutoTokenizer.from_pretrained('BAAI/bge-small-en-v1.5')
 model_embedding = AutoModel.from_pretrained('BAAI/bge-small-en-v1.5', device_map={"": "cuda"}) # , device_map={"": "cuda"}
 model_embedding.eval()
@@ -40,7 +40,7 @@ def embedding_filter(txt, sentence_embedding):
         return True, sentence_embedding
     score_list =[txt_embeddings[0] @ sentence_embedding[i] for i in range(0, len(sentence_embedding))]
     # sentence_embedding = torch.cat((sentence_embedding, txt_embeddings), dim=0)
-    if any(x > 0.8 for x in score_list):
+    if any(x > 0.9 for x in score_list):
         print('embedding不符')
         return False, sentence_embedding
     else:
@@ -48,38 +48,6 @@ def embedding_filter(txt, sentence_embedding):
         sentence_embedding = torch.cat((sentence_embedding, txt_embeddings), dim=0)
         return True, sentence_embedding
 
-def embedding_filter_main(seed_tasks, batch_length):
-    all_logs = []
-    test_log = []
-    question_embedding = torch.load('/home/dyf/data_generate/persona-instruct/embedding/question_embedding.pt')
-    questioner_embedding = torch.load('/home/dyf/data_generate/persona-instruct/embedding/questioner_embedding.pt')
-    idx = 0
-    for t in seed_tasks:
-        try:
-            source = t['source']
-            all_logs.append(t)
-        except:
-            continue
-        question = t['conversations'][0]
-        questioner = t['questioner']
-        f1, _ = embedding_filter(question, question_embedding)
-        f2, _ = embedding_filter(questioner, questioner_embedding)
-        if f1 and f2: # filter_output(documents, question) and filter_output(questioner_doc, questioner) and f1 and f2: # and filter_output(respondent_doc, respondent): # and quality_score_vllm(question, model, sampling_params, chat_formatting_function):
-            _, question_embedding = embedding_filter(question, question_embedding)
-            _, questioner_embedding  = embedding_filter(questioner, questioner_embedding)
-            all_logs.append(t)
-
-            output_log_jsonl(os.path.join('/home/dyf/data_generate/persona-instruct/data/lima/epoch/diff/', f"diff_new_instruct_{batch_length}_person2.jsonl"), all_logs)
-
-        else:
-            test_ = {}
-            test_['idx'] = idx
-            test_['result'] = [f1, f2]
-            test_log.append(test_)
-            output_log_jsonl(os.path.join("/home/dyf/data_generate/persona-instruct/data/lima/wrong/", f"bool_log.jsonl"), test_log)
-            continue    
-        idx += 1
-    return all_logs
 
 def doc_filter(txt, doc):
     # Tokenize sentences
@@ -101,23 +69,38 @@ def doc_filter(txt, doc):
 if __name__ == "__main__":
     question_embedding = []
     all_logs = []
-    seed_tasks_path = "/home/dyf/data_generate/doc-instruct/data/lima/epoch/com/com0-words.jsonl"
+    seed_tasks_path = "/home/dyf/data_generate/doc-instruct/data/lima/epoch/com/com_ablation/new_response/com2.jsonl"
     seed_tasks = [json.loads(l) for l in open(seed_tasks_path, "r")]
-    for task in tqdm(seed_tasks):
-        question = task['conversations'][0]
-        # doc = task['doc']
-        # if doc_filter(question, doc):
-        #     continue
-        f1, _ = embedding_filter(question, question_embedding)
-        if f1: # filter_output(documents, question) and filter_output(questioner_doc, questioner) and f1 and f2: # and filter_output(respondent_doc, respondent): # and quality_score_vllm(question, model, sampling_params, chat_formatting_function):
-            _, question_embedding = embedding_filter(question, question_embedding)
-            # documents.append(question)
-            # questioner_doc.append(questioner)
-            # respondent_doc.append(respondent)
-            print(question)
-            all_logs.append(task)
-            # if len(all_logs) >= 11000:
-            #     output_log_jsonl(os.path.join('/home/dyf/data_generate/doc-instruct/data/lima/epoch/filter_2/', f"10000_filter_2.jsonl"), all_logs)
-            #     break
+    batch_size = 5000
+    # distance_threshold = args.distance_distance_threshold
+    # search_space_size = args.search_space_size
+    search_batch_size = batch_size
+    n_batches = (len(seed_tasks) + search_batch_size - 1) // search_batch_size
+    for batch_idx in tqdm(range(n_batches)):
+        start_idx = batch_idx * search_batch_size
+        end_idx = min((batch_idx + 1) * search_batch_size, len(seed_tasks))
+        batch_tasks = seed_tasks[start_idx:end_idx]
+        sorted_tasks = sorted(batch_tasks, key=lambda x: x['complexity_score'], reverse=True)
+        total_com = 0
+        # for com in seed_tasks:
+        #     total_com += com['complexity_score']
+        # avg_com = total_com / len(seed_tasks)
+        for task in tqdm(sorted_tasks):
+            question = task['conversations'][0]
+            # doc = task['doc']
+            # if doc_filter(question, doc):
+            #     continue
+            f1, tmp = embedding_filter(question, question_embedding)
+            if f1 :# or task['complexity_score'] >= avg_com: # filter_output(documents, question) and filter_output(questioner_doc, questioner) and f1 and f2: # and filter_output(respondent_doc, respondent): # and quality_score_vllm(question, model, sampling_params, chat_formatting_function):
+                # _, question_embedding = embedding_filter(question, question_embedding)
+                question_embedding = tmp
+                # documents.append(question)
+                # questioner_doc.append(questioner)
+                # respondent_doc.append(respondent)
+                print(question)
+                all_logs.append(task)
+                if len(all_logs) >= 20000:
+                    # output_log_jsonl(os.path.join('/home/dyf/data_generate/doc-instruct/data/lima/epoch/filter_2/', f"10000_filter_2.jsonl"), all_logs)
+                    break
 
-    output_log_jsonl(os.path.join('/home/dyf/data_generate/doc-instruct/data/lima/epoch/filter_2/', f"10000_filter_2.jsonl"), all_logs)
+    output_log_jsonl(os.path.join('/home/dyf/data_generate/doc-instruct/data/lima/epoch/com/com_ablation/new_response/diverse_filter/', f"com2_10000_filter_0.9.jsonl"), all_logs)

@@ -9,7 +9,7 @@ import json
 # 确保已经下载了NLTK的资源
 # nltk.download('punkt')
 # nltk.download('averaged_perceptron_tagger')
-seed_tasks_path = "/home/dyf/data_generate/persona-instruct/data/lima/merged/diff_merged_instruct_20000_person2_round_0.jsonl"
+seed_tasks_path = "/home/dyf/data_generate/doc-instruct/data/lima/epoch/com/com_ablation/new_response/diverse_filter/1w_com2_diverse.jsonl"
 seed_tasks = [json.loads(l) for l in open(seed_tasks_path, "r")]
 persona_doc = []
 for tmp in seed_tasks:

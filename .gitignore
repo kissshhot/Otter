@@ -2,3 +2,6 @@ data/
 embedding/
 __pycache__/
 data_copy/
+py_pre/
+scripts_pre/
+ablation_test/

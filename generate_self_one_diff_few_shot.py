@@ -163,7 +163,7 @@ def UCB_sample_record(seed_tasks, batch_length, roundi, is_vllm, model, sampling
     # all_logs = [json.loads(l) for l in open("/home/dyf/data_generate/doc-instruct/data/start_tasks.jsonl", "r")]
     model_id = model_id.split('/')[-1]
     all_logs = []
-    lima_tasks = [json.loads(l) for l in open("/home/dyf/data_generate/doc-instruct/data/lima_train.jsonl", "r")]
+    lima_tasks = [json.loads(l) for l in open("/home/dyf/data_generate/self-instruct/data/seed_tasks.jsonl", "r")]
     test_log = []
     # question_embedding = []
     # raw_logs = []
@@ -175,14 +175,14 @@ def UCB_sample_record(seed_tasks, batch_length, roundi, is_vllm, model, sampling
             # batch_length = 2000000
             # if idx <= 836:
             #     continue
-            task = random.sample(lima_tasks, 10)
+            task = random.sample(lima_tasks, 8)
             # sl_attributions = attributions # random.sample(attributions, 5)
             # doc = seed_tasks[idx]['doc']
             # if len(doc) >=1000:
             #     doc = doc[0:1000]
             # doc_keypoint_prompt_math doc_keypoint_prompt_few_atr doc_keypoint_prompt_self_wo_attr doc_keypoint_prompt_self_n_test
             # prompt = doc_keypoint_prompt_self_wo_attr.format(doc=doc)
-            prompt = doc_keypoint_prompt_self_few_shot.format(question1=task[0]['conversations'][0], question2=task[1]['conversations'][0], question3=task[2]['conversations'][0], question4=task[3]['conversations'][0], question5=task[4]['conversations'][0], question6=task[5]['conversations'][0], question7=task[6]['conversations'][0], question8=task[7]['conversations'][0], question9=task[8]['conversations'][0], question10=task[9]['conversations'][0])
+            prompt = doc_keypoint_prompt_self_few_shot.format(question1=task[0]['instruction'], question2=task[1]['instruction'], question3=task[2]['instruction'], question4=task[3]['instruction'], question5=task[4]['instruction'], question6=task[5]['instruction'], question7=task[6]['instruction'], question8=task[7]['instruction'])
             # prompt = persona_diff_instruct_generate_simple.format(questioner1=task[0]['questioner'], questioner2=task[1]['questioner'], questioner3=task[2]['questioner'], question1=task[0]['conversations'][0], question2=task[1]['conversations'][0], question3=task[2]['conversations'][0])
             et = False
             while True:

@@ -5,6 +5,7 @@ import argparse
 from transformers import AutoTokenizer
 # os.environ["CUDA_VISIBLE_DEVICES"] = "4,5,6,7"
 # model = AutoModelForCausalLM.from_pretrained(model_id, device_map="auto")
+from prompts.prompt_template_persona2 import answer_generate_self
 import vllm
 from importlib import import_module
 import torch
@@ -108,9 +109,9 @@ def response_generate_main(batch_dir, seed_tasks, model, sampling_params, chat_f
     # original_list = [[1, 2, 3], [4, 5, 6]]
     copied_list = copy.deepcopy(seed_tasks)
     for t in tqdm(copied_list):
-        # instruction = t['conversations'][0]
-        # prompt = persona_com_instruct_generate_rewrite.format(questioner=questioner, question=question)
-        prompt = t['conversations'][0].strip("*").strip() # answer_generate.format(instruction=instruction).strip()
+        instruction = t['conversations'][0].strip("*").strip()
+        prompt = answer_generate_self.format(instruction=instruction)
+        # prompt = t['conversations'][0].strip("*").strip() # answer_generate.format(instruction=instruction).strip()
         # conversation = [{"role": "user", "content": inputs}]
         # tools = [get_current_weather]
 

@@ -5,7 +5,7 @@ CUDA_VISIBLE_DEVICES=2,3 python /home/dyf/data_generate/doc-instruct/generate.py
     --seed_tasks_path /home/dyf/data/doc/falcon.jsonl \
     --roundi 0 \
     --is_vllm \
-    --model_id /data1/dyf/model/Qwen2.5-7B-Instruct/ \
+    --model_id /data1/dyf/model/Mistral-7B-Instruct-v0.3 \
     --batch_length 20000
 
 # /data1/dyf/model/Llama-3.1-8B-Instruct

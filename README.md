@@ -6,7 +6,7 @@
 
 This is the official repository for ICLR 2025 paper "[Otter: Browsing then Ideating Helps in Document-Inspired High-Quality Instruction Data Synthesis](https://arxiv.org/abs/2406.08464)". Magpie generates high-quality alignment data by prompting aligned LLMs with their pre-query templates. Unlike many existing synthetic data generation methods, Magpie doesn't rely on prompt engineering or seed questions for generating synthetic data. Instead, it uses the prompt template of an aligned LLM to generate both the user query and an LLM response.
 
-- 🤗 [**Huggingface (Models and Datasets)**](https://huggingface.co/Magpie-Align)
+- 🤗 [**Huggingface (Models and Datasets)**](https://huggingface.co/datasets/kissshhot)
 - 🧭 [**Dataset Navigation**](navigation.md)
 - 🕸️ [**Website**](https://magpie-align.github.io/)
 - 📄 [**Technical Report**](https://arxiv.org/abs/2406.08464)

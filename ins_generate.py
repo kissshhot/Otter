@@ -1,7 +1,7 @@
 import argparse
 import json
 import os
-from com_generate import otter_com
+from diff_generate import otter_generate
 import vllm
 from importlib import import_module
 import torch
@@ -14,21 +14,15 @@ def parse_args():
         "--batch_dir",
         type=str,
         required=True,
-        default="/home/dyf/data_generate/doc-instruct/data/lima/epoch/com/",
+        default="/home/dyf/data_generate/doc-instruct/data/lima/response/",
         help="The directory where the batch is stored.",
     )
     parser.add_argument(
-        "--seed_tasks_path",
+        "--doc_path",
         type=str,
         required=True,
-        default="/home/dyf/data_generate/doc-instruct/data/lima/epoch/com/te.jsonl",
-        help="The path to instruction.",
-    )
-    parser.add_argument(
-        "--roundi",
-        type=int,
-        default=0,
-        help="complexity enhancement round",
+        default="/home/dyf/data_generate/doc-instruct/data/falcon.jsonl",
+        help="The path to the documents.",
     )
     parser.add_argument(
         "--is_vllm",
@@ -38,12 +32,13 @@ def parse_args():
         "--batch_length",
         type=int,
         default=10,
-        help="ins generated each round",
+        help="ins generated each batch",
     )
     parser.add_argument(
         "--model_id",
         type=str,
-        default=""
+        default="/data1/dyf/model/Llama-3.1-Tulu-3-8B",
+        help="The path to the model",
     )
     return parser.parse_args()
 
@@ -68,16 +63,13 @@ def create_prompt_with_huggingface_tokenizer_template(messages, tokenizer, add_b
         formatted_text = tokenizer.bos_token + formatted_text
     return formatted_text
 
+
 if __name__ == "__main__":
     args = parse_args()
-    args.is_vllm = True
     all_logs = []
-    roundi = args.roundi
     batch_dir = args.batch_dir
     model_id = args.model_id
-    is_vllm = args.is_vllm
-    batch_length = args.batch_length
-    seed_tasks = [json.loads(l) for l in open(args.seed_tasks_path, "r")]
+    documents = [json.loads(l) for l in open(args.doc_path, "r")]
     if args.is_vllm == True:
         chat_formatting_function = dynamic_import_function("templates.create_prompt_with_huggingface_tokenizer_template")
         model = vllm.LLM(
@@ -88,9 +80,10 @@ if __name__ == "__main__":
             tokenizer_revision=None, 
             revision=None,
         )
+        
         sampling_params = vllm.SamplingParams(
             temperature=0.0,  # greedy decoding
             max_tokens=5000,
         )
         tokenizer = AutoTokenizer.from_pretrained(model_id)
-    seed_tasks = otter_com(seed_tasks, roundi, is_vllm, batch_length, model, sampling_params, chat_formatting_function, tokenizer, model_id, batch_dir)
+    otter_generate(documents, args.batch_length, args.is_vllm, model, sampling_params, chat_formatting_function, tokenizer, model_id, batch_dir)

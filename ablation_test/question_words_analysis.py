@@ -1,97 +1,82 @@
 import nltk
-from nltk.tokenize import word_tokenize
-from nltk.corpus import stopwords
-from nltk import pos_tag
-from collections import Counter, defaultdict
-from pyecharts.charts import Pie, Sunburst
-from pyecharts import options as opts
+from nltk import pos_tag, word_tokenize
+from collections import defaultdict, Counter
 import json
-# 确保已经下载了NLTK的资源
-# nltk.download('punkt')
-# nltk.download('averaged_perceptron_tagger')
-seed_tasks_path = "/home/dyf/data_generate/doc-instruct/data/lima/epoch/com/com_ablation/new_response/diverse_filter/1w_com2_diverse.jsonl"
-seed_tasks = [json.loads(l) for l in open(seed_tasks_path, "r")]
-persona_doc = []
-for tmp in seed_tasks:
-    persona_doc.append(tmp['conversations'][0])
-# 示例字符串列表
-strings = persona_doc
-# 示例字符串列表
 
-# 准备一个空字典来存储动词-名词对及其频率
-verb_noun_pairs = defaultdict(Counter)
+response_path = '/home/dyf/data_generate/doc-instruct/data/lima/epoch/com/com_ablation/new_response/diverse_filter/1w_com2_diverse.jsonl'
+data = [json.loads(l) for l in open(response_path, "r")]
 
-# 定义be动词的所有形式
-be_verbs = {"is", "am", "are", "was", "were", "be", "being", "been", "\'m", "\'ve"}
+# 假设数据是一个包含文本的列表
+texts = data  # 如果数据是字典或其他结构，请根据实际情况提取文本
+excluded_verbs = ['be', 'do', 'does', 'consider', 'considers', 'considered', 'considering', 'is', 'are', 'am']
 
-# 遍历字符串列表
-for sentence in strings:
-    # 分词
-    words = word_tokenize(sentence)
+# 提取动词和名词
+verb_noun_counts = defaultdict(Counter)
 
-    # 词性标注
-    tagged = pos_tag(words)
+for text in texts:
+    tokens = word_tokenize(text['conversations'][0])
+    tagged = pos_tag(tokens)
+    for word, tag in tagged:
+        if tag.startswith('VB'):  # 动词
+            verb = word.lower()
+            if verb in excluded_verbs:  # 如果动词在排除列表中，跳过
+                continue
+        elif tag.startswith('NN'):  # 名词
+            noun = word.lower()
+            if 'verb' in locals():  # 确保动词已经出现且未被排除
+                verb_noun_counts[verb][noun] += 1
+                del verb  # 重置动词
 
-    # 遍历标注后的词
-    for i in range(len(tagged)):
-        word, tag = tagged[i]
-        # 检查是否为动词且不是be动词
-        if tag.startswith('VB') and word.lower() not in be_verbs:
-            # 查找随后的名词
-            for j in range(i+1, len(tagged)):
-                next_word, next_tag = tagged[j]
-                if next_tag.startswith('NN'):
-                    # 构建动词-名词对
-                    verb_noun_pairs[word.lower()][next_word.lower()] += 1
-                    break
+# 统计最常见的20个动词
+all_verbs = [verb for verb in verb_noun_counts.keys()]
+top_verbs = Counter(all_verbs).most_common(25)
+top_verbs = [verb for verb, count in top_verbs]
 
-# 统计每个动词的总频率
-verb_frequency = Counter()
-for verb, nouns in verb_noun_pairs.items():
-    verb_frequency[verb] = sum(nouns.values())
+# 获取每个动词的top 5名词
+top_nouns_per_verb = {verb: verb_noun_counts[verb].most_common(5) for verb in top_verbs}
 
-# 选择频率前50的动词
-top_50_verbs = [verb for verb, _ in verb_frequency.most_common(50)]
+from pyecharts import options as opts
+from pyecharts.charts import Sunburst
 
-# 准备绘制扇形图的数据
-top_verbs_data = {verb: sum(nouns.values()) for verb, nouns in verb_noun_pairs.items() if verb in top_50_verbs}
-
-sunburst_data = [
-    {
+# 准备数据
+data = []
+for verb in top_verbs:
+    verb_data = {
         "name": verb,
-        "value": top_verbs_data[verb],
-        "label_opts": opts.LabelOpts(
-            position="inside",
-            font_size=12,  # 内层动词字体大小
-            color="black"
-        ),
-        "children": [
-            {
-                "name": noun,
-                "value": freq,
-                "label_opts": opts.LabelOpts(is_show=False)  # 隐藏外层名词标签
-            }
-            for noun, freq in verb_noun_pairs[verb].items()
-        ]
+        "children": [{"name": noun, "value": count} for noun, count in top_nouns_per_verb[verb]]
     }
-    for verb in top_50_verbs
-]
+    data.append(verb_data)
+    
+noun_counts = [count for verb in top_verbs for _, count in top_nouns_per_verb[verb]]
+max_verb_count = max(verb_total_counts.values()) if verb_total_counts else 0
+max_noun_count = max(noun_counts) if noun_counts else 0
+max_count = max(max_verb_count, max_noun_count)
+# 动态计算字体大小的函数
+def dynamic_font_size(value):
+    min_size = 10
+    max_size = 20
+    if max_count == 0:
+        return min_size
+    return int(min_size + (max_size - min_size) * (value / max_count))
 
-# 创建旭日图
-sunburst = Sunburst()
-sunburst.add(
-    series_name="Top 50 Verbs and Noun Pairs",
-    data_pair=sunburst_data,
-    radius=[0, "70%", "90%"],  # 控制旭日图的内外半径，增加内层半径
+chart = (
+    Sunburst(init_opts=opts.InitOpts(width="1500px", height="1000px"))
+    .add(
+        series_name="词频分布",
+        data_pair=data,
+        radius=[0, "90%"],
+        label_opts=opts.LabelOpts(
+            formatter="{b}\n({c})",
+            font_size=dynamic_font_size,
+            position="inside",
+            rotate="radial"
+        )
+    )
+    .set_global_opts(
+        title_opts=opts.TitleOpts(title="动词-名词词频分布图"),
+        tooltip_opts=opts.TooltipOpts(formatter="{b}: {c}")
+    )
 )
 
-# 设置全局配置项，隐藏工具栏并设置标题
-sunburst.set_global_opts(
-    title_opts=opts.TitleOpts(title="Top 50 Verbs and Noun Pairs Distribution"),
-    toolbox_opts=opts.ToolboxOpts(is_show=False),
-    legend_opts=opts.LegendOpts(is_show=False)
-)
-
-
-# 渲染图表到HTML文件
-sunburst.render("/home/dyf/data_generate/persona-instruct/ablation_test/question_words_analysis.html")
+# 渲染图表
+chart.render("/home/dyf/data_generate/doc-instruct/ablation_test/sunburst_chart.html")
